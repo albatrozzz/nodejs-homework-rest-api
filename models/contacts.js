@@ -30,7 +30,7 @@ const removeContact = async (contactId) => {
   return deleteContact
 }
 
-const addContact = async () => {
+const addContact = async ({name, email, phone}) => {
   const contactsList = await listContacts()
   const idx = contactsList.findIndex(item => item.email === email)
   if (idx !== -1){
@@ -59,6 +59,7 @@ const updateContact = async (contactId, body) => {
   const contactsList = await listContacts()
   contactsList.push(newContact)
   await fs.writeFile(contactsPath, JSON.stringify(contactsList,null,4))
+  return newContact
 }
 
 module.exports = {
