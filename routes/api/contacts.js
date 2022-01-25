@@ -20,7 +20,6 @@ router.get('/', async (req, res, next) => {
 })
 
 router.get('/:contactId', async (req, res, next) => {
-  console.log(req.params.contactId)
   try {
     const contact = await contactsAPI.getContactById(req.params.contactId)
     if (!contact){
@@ -70,7 +69,6 @@ router.put('/:contactId', async (req, res, next) => {
         throw new createError(400, error.message)
     }
     const updatedContact = await contactsAPI.updateContact(req.params.contactId, req.body)
-    console.log(updatedContact)
     if (!updatedContact){
       throw new createError(404, "Not found")
     }
