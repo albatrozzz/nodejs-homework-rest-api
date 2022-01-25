@@ -48,18 +48,16 @@ const addContact = async ({name, email, phone}) => {
 }
 
 const updateContact = async (contactId, body) => {
-  let contactData = {}
-  try{
-    const [contact] = await removeContact(contactId)
-    contactData = {...contact}
-  } catch (error){
+  const contactList = await listContacts()
+  const idx = contactList.findIndex(contact => contact.id === contactId)
+  if (idx === -1){
     return null
   }
-  const newContact = {...contactData, ...body}
-  const contactsList = await listContacts()
-  contactsList.push(newContact)
-  await fs.writeFile(contactsPath, JSON.stringify(contactsList,null,4))
-  return newContact
+  const [contact] = contactList.splice(idx, 1)
+  const updatedContact = {...contact, ...body}
+  contactList.push(updatedContact)
+  await fs.writeFile(contactsPath, JSON.stringify(contactList,null,4))
+  return updatedContact
 }
 
 module.exports = {
