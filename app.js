@@ -5,6 +5,8 @@ const cors = require('cors')
 const contactsRouter = require('./routes/api/contacts')
 
 const app = express()
+// Login: DmitriyP
+//Password: xrCTJ3UQEZXi81S7
 
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
 
