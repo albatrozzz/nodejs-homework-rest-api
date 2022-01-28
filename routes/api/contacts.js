@@ -1,18 +1,14 @@
 const express = require('express')
-const contactsAPI = require('../../models/contacts.js')
+const {Contact, schemas} = require('../../models/contacts.js')
 const createError = require("http-errors")
 const Joi = require('joi')
 
 const router = express.Router()
-const contactSchema = Joi.object({
-  name: Joi.string().alphanum().min(3),
-  email: Joi.string().email(),
-  phone: Joi.string().min(6).max(12)
-})
+
 
 router.get('/', async (req, res, next) => {
   try {
-    const contactsList = await contactsAPI.listContacts()
+    const contactsList = await Contact.find({})
     res.json({contactsList})
   } catch (error) {
     next(error)
@@ -21,12 +17,15 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:contactId', async (req, res, next) => {
   try {
-    const contact = await contactsAPI.getContactById(req.params.contactId)
+    const contact = await Contact.findById(req.params.contactId)
     if (!contact){
       throw new createError(404, "Not found")
     }
     res.json({ contact})
   } catch (error) {
+    if(error.message.includes("Cast to ObjectId failed")){
+      error.status = 404;
+    }
     next(error)
   }
 })
@@ -36,20 +35,23 @@ router.post('/', async (req, res, next) => {
     if (!req.body.name || !req.body.email || !req.body.phone){
       throw new createError(400, "missing required name field")
     }
-    const {error} = contactSchema.validate(req.body);
+    const {error} = schemas.add.validate(req.body);
     if(error){
         throw new createError(400, error.message)
     }
-    const newContact = await contactsAPI.addContact(req.body)
+    const newContact = await Contact.create(req.body)
     res.status(201).json({ newContact })
   } catch (error) {
+    if(error.message.includes("validation failed")){
+      error.status = 400;
+    }
     next(error)
   }
 })
 
 router.delete('/:contactId', async (req, res, next) => {
   try {
-    const response = await contactsAPI.removeContact(req.params.contactId)
+    const response = await Contact.findByIdAndDelete(req.params.contactId)
     if (!response){
       throw new createError(404, "Not found")
     }
