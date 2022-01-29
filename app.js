@@ -5,9 +5,6 @@ const cors = require('cors')
 const contactsRouter = require('./routes/api/contacts')
 
 const app = express()
-// Login: DmitriyP
-//Password: xrCTJ3UQEZXi81S7
-// mongodb+srv://DmitriyP:xrCTJ3UQEZXi81S7@cluster0.g4rar.mongodb.net/db-contacts?retryWrites=true&w=majority
 
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short'
 
