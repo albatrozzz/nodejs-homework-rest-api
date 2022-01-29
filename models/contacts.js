@@ -27,9 +27,14 @@ const joiContactSchema = Joi.object({
   phone: Joi.string().min(6).max(12)
 })
 
+const joiContactUpdateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean().required()
+})
+
 module.exports = {
   Contact,
   schemas: {
-    add: joiContactSchema
+    add: joiContactSchema,
+    favorite: joiContactUpdateFavoriteSchema
   }
 }

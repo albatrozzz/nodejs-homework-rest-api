@@ -66,17 +66,36 @@ router.put('/:contactId', async (req, res, next) => {
     if (!req.body.name && !req.body.email && !req.body.phone){
       throw new createError(400, "missing fields")
     }
-    const {error} = contactSchema.validate(req.body);
+    const {error} = schemas.add.validate(req.body);
     if(error){
         throw new createError(400, error.message)
     }
-    const updatedContact = await contactsAPI.updateContact(req.params.contactId, req.body)
+    const updatedContact = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
     if (!updatedContact){
       throw new createError(404, "Not found")
     }
     res.json({ updatedContact })
   } catch (error) {
     next(error)
+  }
+})
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    if(!req.body.favorite){
+      throw new createError(400, "missing field favorite")
+    }
+    const {error} = schemas.favorite.validate(req.body)
+    if(error){
+      throw new createError(400, error.message)
+    }
+    const result = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
+    if(!result){
+      throw new createError(404, "Not found")
+    }
+    res.json({result})
+  } catch (error){
+    next (error)
   }
 })
 
