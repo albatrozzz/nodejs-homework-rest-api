@@ -1,7 +1,7 @@
 const express = require('express')
 const {Contact, schemas} = require('../../models/contacts.js')
 const createError = require("http-errors")
-const Joi = require('joi')
+const {idValidation} = require('../../middlewares')
 
 const router = express.Router()
 
@@ -17,24 +17,21 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:contactId', async (req, res, next) => {
   try {
+
+    idValidation(req.params.contactId)
+
     const contact = await Contact.findById(req.params.contactId)
     if (!contact){
       throw new createError(404, "Not found")
     }
     res.json({ contact})
   } catch (error) {
-    if(error.message.includes("Cast to ObjectId failed")){
-      error.status = 404;
-    }
     next(error)
   }
 })
 
 router.post('/', async (req, res, next) => {
   try {
-    if (!req.body.name || !req.body.email || !req.body.phone){
-      throw new createError(400, "missing required name field")
-    }
     const {error} = schemas.add.validate(req.body);
     if(error){
         throw new createError(400, error.message)
@@ -45,12 +42,16 @@ router.post('/', async (req, res, next) => {
     if(error.message.includes("validation failed")){
       error.status = 400;
     }
+    if(error.message.includes("is required")){
+      error.message = "missing required name field"
+    }
     next(error)
   }
 })
 
 router.delete('/:contactId', async (req, res, next) => {
   try {
+    idValidation(req.params.contactId)
     const response = await Contact.findByIdAndDelete(req.params.contactId)
     if (!response){
       throw new createError(404, "Not found")
@@ -63,13 +64,14 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
-    if (!req.body.name && !req.body.email && !req.body.phone){
-      throw new createError(400, "missing fields")
-    }
-    const {error} = schemas.add.validate(req.body);
+    // if (!req.body.name && !req.body.email && !req.body.phone){
+    //   throw new createError(400, "missing fields")
+    // }
+    const {error} = schemas.update.validate(req.body);
     if(error){
         throw new createError(400, error.message)
     }
+    idValidation(req.params.contactId)
     const updatedContact = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
     if (!updatedContact){
       throw new createError(404, "Not found")
@@ -89,6 +91,7 @@ router.patch('/:contactId/favorite', async (req, res, next) => {
     if(error){
       throw new createError(400, error.message)
     }
+    idValidation(req.params.contactId)
     const result = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
     if(!result){
       throw new createError(404, "Not found")

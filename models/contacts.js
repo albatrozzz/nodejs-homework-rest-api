@@ -12,6 +12,7 @@ const contactSchema = Schema({
   },
   phone: {
     type: String,
+    unique: true
   },
   favorite: {
     type: Boolean,
@@ -21,11 +22,17 @@ const contactSchema = Schema({
 
 const Contact = model("contact", contactSchema)
 
-const joiContactSchema = Joi.object({
+const joiAddContactSchema = Joi.object({
+  name: Joi.string().min(3).required(),
+  email: Joi.string().email().required(),
+  phone: Joi.string().min(6).max(12).required()
+})
+
+const joiUpdateContactSchema = Joi.object({
   name: Joi.string().min(3),
   email: Joi.string().email(),
   phone: Joi.string().min(6).max(12)
-})
+}).or('name', 'email', 'phone')
 
 const joiContactUpdateFavoriteSchema = Joi.object({
   favorite: Joi.boolean().required()
@@ -34,7 +41,8 @@ const joiContactUpdateFavoriteSchema = Joi.object({
 module.exports = {
   Contact,
   schemas: {
-    add: joiContactSchema,
+    add: joiAddContactSchema,
+    update: joiUpdateContactSchema,
     favorite: joiContactUpdateFavoriteSchema
   }
 }
