@@ -64,9 +64,6 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
-    // if (!req.body.name && !req.body.email && !req.body.phone){
-    //   throw new createError(400, "missing fields")
-    // }
     const {error} = schemas.update.validate(req.body);
     if(error){
         throw new createError(400, error.message)
