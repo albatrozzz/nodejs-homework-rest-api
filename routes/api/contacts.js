@@ -1,5 +1,5 @@
 const express = require('express')
-const {Contact, schemas} = require('../../models/contacts.js')
+const {Contact, schemas} = require('../../models/contacts')
 const createError = require("http-errors")
 const {idValidation} = require('../../middlewares')
 
@@ -39,9 +39,6 @@ router.post('/', async (req, res, next) => {
     const newContact = await Contact.create(req.body)
     res.status(201).json({ newContact })
   } catch (error) {
-    if(error.message.includes("validation failed")){
-      error.status = 400;
-    }
     if(error.message.includes("is required")){
       error.message = "missing required name field"
     }
@@ -81,9 +78,6 @@ router.put('/:contactId', async (req, res, next) => {
 
 router.patch('/:contactId/favorite', async (req, res, next) => {
   try {
-    if(!req.body.favorite){
-      throw new createError(400, "missing field favorite")
-    }
     const {error} = schemas.favorite.validate(req.body)
     if(error){
       throw new createError(400, error.message)
@@ -95,6 +89,9 @@ router.patch('/:contactId/favorite', async (req, res, next) => {
     }
     res.json({result})
   } catch (error){
+    if (error.message.includes("is required")){
+      error.message = "missing field favorite"
+    }
     next (error)
   }
 })
