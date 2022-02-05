@@ -31,7 +31,12 @@ const registerJoiSchema = Joi.object({
   password: Joi.string().min(6).required(),
 })
 
+const updateSubscriptionJoiSchema = Joi.object({
+  subscription: Joi.string().required()
+}).or("starter", "pro", "business")
+
 module.exports = {
     User,
     auth: registerJoiSchema,
+    update: updateSubscriptionJoiSchema,
 }

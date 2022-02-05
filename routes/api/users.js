@@ -1,5 +1,5 @@
 const express = require('express')
-const {User, auth} = require('../../models/users')
+const {User, auth, update} = require('../../models/users')
 const createError = require("http-errors")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -82,6 +82,23 @@ router.get('/current', authenticate, async(req, res, next) => {
         email: req.user.email, 
         subscription: req.user.subscription
     })
+})
+
+
+router.patch('/', authenticate, async (req, res, next) => {
+    try {
+        const {error} = update.validate(req.body)
+        if(error){
+            throw new createError(400, error.message)
+          }
+        const updatedUser = await User.findByIdAndUpdate(req.user._id, req.body, {new: true})
+        res.json({
+            email: updatedUser.email,
+            subscription: updatedUser.subscription
+        })
+    } catch (error) {
+        next(error)
+    }
 })
 
 
