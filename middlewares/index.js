@@ -1,5 +1,6 @@
-const {idValidation} = require('./contacts/index')
+const {idValidation, authenticate} = require('./contacts/index')
 
 module.exports = {
-    idValidation
+    idValidation,
+    authenticate
 }
