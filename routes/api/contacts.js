@@ -8,19 +8,28 @@ const router = express.Router()
 
 router.get('/', authenticate,  async (req, res, next) => {
   try {
-    const {page = 1, limit = 10} = req.query
+    const {page = 1, limit = 10, favorite} = req.query
     const pageNumber = Number(page)
     const limitValue = Number(limit)
+    console.log(favorite)
     if (!pageNumber || !limitValue){
       throw new createError(400, "Bad request")
     }
     const skip = (page - 1) * limit
-    if (skip <= 0){
+    if (skip < 0){
       throw new createError(404, "Not found")
     }
     const {_id} = req.user
-    const contactsList = await Contact.find(
-      {owner: _id},
+    let searchQuery = {
+      owner: _id
+    }
+    if (favorite){
+      searchQuery = {
+        owner: _id,
+        favorite
+      }
+    }
+    const contactsList = await Contact.find(searchQuery,
       "-createdAt -updatedAt",
       {skip, limit: +limit}
       ).populate("owner", "email")
