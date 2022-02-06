@@ -43,7 +43,7 @@ router.get('/:contactId', authenticate, async (req, res, next) => {
 
     idValidation(req.params.contactId)
 
-    const [contact] = await Contact.find({
+    const contact = await Contact.findOne({
       _id: req.params.contactId,
       owner: req.user._id
     })
