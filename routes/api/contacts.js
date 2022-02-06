@@ -11,7 +11,6 @@ router.get('/', authenticate,  async (req, res, next) => {
     const {page = 1, limit = 10, favorite} = req.query
     const pageNumber = Number(page)
     const limitValue = Number(limit)
-    console.log(favorite)
     if (!pageNumber || !limitValue){
       throw new createError(400, "Bad request")
     }
