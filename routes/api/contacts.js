@@ -9,7 +9,15 @@ const router = express.Router()
 router.get('/', authenticate,  async (req, res, next) => {
   try {
     const {page = 1, limit = 10} = req.query
+    const pageNumber = Number(page)
+    const limitValue = Number(limit)
+    if (!pageNumber || !limitValue){
+      throw new createError(400, "Bad request")
+    }
     const skip = (page - 1) * limit
+    if (skip <= 0){
+      throw new createError(404, "Not found")
+    }
     const {_id} = req.user
     const contactsList = await Contact.find(
       {owner: _id},
