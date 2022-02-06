@@ -12,7 +12,6 @@ const {SECRET_CODE} = process.env
 
 router.post('/signup', async (req, res, next) => {
     try {
-        console.log(req.body)
         const {error} = auth.validate(req.body)
         if(error){
             throw new createError(400, error.message)
@@ -28,7 +27,6 @@ router.post('/signup', async (req, res, next) => {
             email, 
             password: hashPassword,
         })
-        console.log(newUser)
         res.status(201).json({ user: {
             email,
             subscription: newUser.subscription

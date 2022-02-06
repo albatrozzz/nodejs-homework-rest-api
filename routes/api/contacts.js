@@ -27,7 +27,10 @@ router.get('/:contactId', authenticate, async (req, res, next) => {
 
     idValidation(req.params.contactId)
 
-    const contact = await Contact.findById(req.params.contactId)
+    const [contact] = await Contact.find({
+      _id: req.params.contactId,
+      owner: req.user._id
+    })
     if (!contact){
       throw new createError(404, "Not found")
     }
@@ -57,7 +60,10 @@ router.post('/', authenticate, async (req, res, next) => {
 router.delete('/:contactId', authenticate, async (req, res, next) => {
   try {
     idValidation(req.params.contactId)
-    const response = await Contact.findByIdAndDelete(req.params.contactId)
+    const response = await Contact.findOneAndDelete({
+      _id: req.params.contactId,
+      owner: req.user._id
+    })
     if (!response){
       throw new createError(404, "Not found")
     }
@@ -74,7 +80,10 @@ router.put('/:contactId', authenticate, async (req, res, next) => {
         throw new createError(400, error.message)
     }
     idValidation(req.params.contactId)
-    const updatedContact = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
+    const updatedContact = await Contact.findOneAndUpdate({
+      _id: req.params.contactId,
+      owner: req.user._id
+    }, req.body, {new: true})
     if (!updatedContact){
       throw new createError(404, "Not found")
     }
@@ -91,7 +100,10 @@ router.patch('/:contactId/favorite', authenticate, async (req, res, next) => {
       throw new createError(400, error.message)
     }
     idValidation(req.params.contactId)
-    const result = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
+    const result = await Contact.findOneAndUpdate({
+      _id: req.params.contactId,
+      owner: req.user._id
+    }, req.body, {new: true})
     if(!result){
       throw new createError(404, "Not found")
     }
