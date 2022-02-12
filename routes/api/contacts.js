@@ -1,26 +1,52 @@
 const express = require('express')
 const {Contact, schemas} = require('../../models/contacts')
 const createError = require("http-errors")
-const {idValidation} = require('../../middlewares')
+const {idValidation, authenticate} = require('../../middlewares')
 
 const router = express.Router()
 
 
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate,  async (req, res, next) => {
   try {
-    const contactsList = await Contact.find({})
+    const {page = 1, limit = 10, favorite} = req.query
+    const pageNumber = Number(page)
+    const limitValue = Number(limit)
+    if (!pageNumber || !limitValue){
+      throw new createError(400, "Bad request")
+    }
+    const skip = (page - 1) * limit
+    if (skip < 0){
+      throw new createError(404, "Not found")
+    }
+    const {_id} = req.user
+    let searchQuery = {
+      owner: _id
+    }
+    if (favorite){
+      searchQuery = {
+        owner: _id,
+        favorite
+      }
+    }
+    const contactsList = await Contact.find(searchQuery,
+      "-createdAt -updatedAt",
+      {skip, limit: +limit}
+      ).populate("owner", "email")
     res.json({contactsList})
   } catch (error) {
     next(error)
   }
 })
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', authenticate, async (req, res, next) => {
   try {
 
     idValidation(req.params.contactId)
 
-    const contact = await Contact.findById(req.params.contactId)
+    const contact = await Contact.findOne({
+      _id: req.params.contactId,
+      owner: req.user._id
+    })
     if (!contact){
       throw new createError(404, "Not found")
     }
@@ -30,13 +56,14 @@ router.get('/:contactId', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', authenticate, async (req, res, next) => {
   try {
     const {error} = schemas.add.validate(req.body);
     if(error){
         throw new createError(400, error.message)
     }
-    const newContact = await Contact.create(req.body)
+    const data = {...req.body, owner: req.user._id}
+    const newContact = await Contact.create(data)
     res.status(201).json({ newContact })
   } catch (error) {
     if(error.message.includes("is required")){
@@ -46,10 +73,13 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', authenticate, async (req, res, next) => {
   try {
     idValidation(req.params.contactId)
-    const response = await Contact.findByIdAndDelete(req.params.contactId)
+    const response = await Contact.findOneAndDelete({
+      _id: req.params.contactId,
+      owner: req.user._id
+    })
     if (!response){
       throw new createError(404, "Not found")
     }
@@ -59,14 +89,17 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 })
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', authenticate, async (req, res, next) => {
   try {
     const {error} = schemas.update.validate(req.body);
     if(error){
         throw new createError(400, error.message)
     }
     idValidation(req.params.contactId)
-    const updatedContact = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
+    const updatedContact = await Contact.findOneAndUpdate({
+      _id: req.params.contactId,
+      owner: req.user._id
+    }, req.body, {new: true})
     if (!updatedContact){
       throw new createError(404, "Not found")
     }
@@ -76,14 +109,17 @@ router.put('/:contactId', async (req, res, next) => {
   }
 })
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', authenticate, async (req, res, next) => {
   try {
     const {error} = schemas.favorite.validate(req.body)
     if(error){
       throw new createError(400, error.message)
     }
     idValidation(req.params.contactId)
-    const result = await Contact.findByIdAndUpdate(req.params.contactId, req.body, {new: true})
+    const result = await Contact.findOneAndUpdate({
+      _id: req.params.contactId,
+      owner: req.user._id
+    }, req.body, {new: true})
     if(!result){
       throw new createError(404, "Not found")
     }
