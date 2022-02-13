@@ -10,8 +10,17 @@ const multerConfig = multer.diskStorage({
     },
 })
 
+const fileFilter = (req, file, cb) => {
+    if (!file.mimetype.includes('image')){
+        cb(null, false)
+        return
+    }
+    cb(null, true)
+}
+
 const upload = multer({
-    storage: multerConfig
+    storage: multerConfig,
+    fileFilter
 })
 
 

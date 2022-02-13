@@ -8,7 +8,7 @@ const path = require('path')
 const fs = require("fs/promises")
 
 
-const {authenticate, upload, resize} = require('../../middlewares')
+const {authenticate, upload, resize, avatarCheck} = require('../../middlewares')
 const { write } = require('jimp')
 
 const router = express.Router()
@@ -29,7 +29,6 @@ router.post('/signup', async (req, res, next) => {
         const salt = await bcrypt.genSalt(10)
         const hashPassword = await bcrypt.hash(password, salt)
         const avatar = gravatar.url(email)
-        console.log(avatar)
         const newUser = await User.create({
             email, 
             password: hashPassword,
@@ -110,7 +109,7 @@ router.patch('/', authenticate, async (req, res, next) => {
 
 const avatarsDir = path.join(__dirname, "../../", "public", "avatars")
 
-router.patch('/avatars', authenticate, upload.single("avatar"), resize, async (req, res, next) => {
+router.patch('/avatars', authenticate, upload.single("avatar"), avatarCheck, resize, async (req, res, next) => {
     const {_id} = req.user
     const {path: tempUpload, filename} = req.file
     try {
