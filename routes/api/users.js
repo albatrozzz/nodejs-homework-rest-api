@@ -9,7 +9,7 @@ const fs = require("fs/promises")
 
 
 const {authenticate, upload, resize, avatarCheck} = require('../../middlewares')
-const { write } = require('jimp')
+const { HttpError } = require('http-errors')
 
 const router = express.Router()
 
@@ -28,7 +28,7 @@ router.post('/signup', async (req, res, next) => {
         }
         const salt = await bcrypt.genSalt(10)
         const hashPassword = await bcrypt.hash(password, salt)
-        const avatar = gravatar.url(email)
+        const avatar = gravatar.url(email, {protocol: 'http'})
         const newUser = await User.create({
             email, 
             password: hashPassword,
@@ -108,6 +108,7 @@ router.patch('/', authenticate, async (req, res, next) => {
 
 
 const avatarsDir = path.join(__dirname, "../../", "public", "avatars")
+const domain = 'http://localhost:3000'
 
 router.patch('/avatars', authenticate, upload.single("avatar"), avatarCheck, resize, async (req, res, next) => {
     const {_id} = req.user
@@ -117,7 +118,7 @@ router.patch('/avatars', authenticate, upload.single("avatar"), avatarCheck, res
         const newFileName = `${_id}.${extention}`
         const resultUpload = path.join(avatarsDir, newFileName)
         await fs.rename(tempUpload, resultUpload)
-        const avatarURL = path.join("avatars", newFileName)
+        const avatarURL = path.join(domain, "public", "avatars", newFileName)
         await User.findByIdAndUpdate(_id, {avatarURL})
         res.json({
             avatarURL
