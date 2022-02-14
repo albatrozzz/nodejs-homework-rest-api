@@ -3,8 +3,13 @@ const {User, auth, update} = require('../../models/users')
 const createError = require("http-errors")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const gravatar = require('gravatar')
+const path = require('path')
+const fs = require("fs/promises")
 
-const {authenticate} = require('../../middlewares')
+
+const {authenticate, upload, resize, avatarCheck} = require('../../middlewares')
+const { HttpError } = require('http-errors')
 
 const router = express.Router()
 
@@ -23,9 +28,11 @@ router.post('/signup', async (req, res, next) => {
         }
         const salt = await bcrypt.genSalt(10)
         const hashPassword = await bcrypt.hash(password, salt)
+        const avatar = gravatar.url(email, {protocol: 'http'})
         const newUser = await User.create({
             email, 
             password: hashPassword,
+            avatarURL: avatar,
         })
         res.status(201).json({ user: {
             email,
@@ -93,6 +100,28 @@ router.patch('/', authenticate, async (req, res, next) => {
         res.json({
             email: updatedUser.email,
             subscription: updatedUser.subscription
+        })
+    } catch (error) {
+        next(error)
+    }
+})
+
+
+const avatarsDir = path.join(__dirname, "../../", "public", "avatars")
+const domain = 'http://localhost:3000'
+
+router.patch('/avatars', authenticate, upload.single("avatar"), avatarCheck, resize, async (req, res, next) => {
+    const {_id} = req.user
+    const {path: tempUpload, filename} = req.file
+    try {
+        const [extention] = filename.split(".").reverse()
+        const newFileName = `${_id}.${extention}`
+        const resultUpload = path.join(avatarsDir, newFileName)
+        await fs.rename(tempUpload, resultUpload)
+        const avatarURL = path.join(domain, "public", "avatars", newFileName)
+        await User.findByIdAndUpdate(_id, {avatarURL})
+        res.json({
+            avatarURL
         })
     } catch (error) {
         next(error)
